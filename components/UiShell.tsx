@@ -46,7 +46,7 @@ export function UiShell() {
       };
       
       addAvatar(objectData);
-      setAvatarObject(objectId, scene, bones, morphTargets, skinnedMesh);
+      setAvatarObject(objectId, scene, bones, morphTargets, skinnedMesh || undefined);
       
       console.log(`Object loaded successfully: ${file.name}`);
     } catch (error) {
