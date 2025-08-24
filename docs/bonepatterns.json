@@ -1,0 +1,508 @@
+[
+    {
+      "index": 0,
+      "name": "Hips",
+      "parent": "Armature",
+      "children": [
+        "LeftUpLeg",
+        "RightUpLeg",
+        "Spine"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 1,
+      "name": "Spine",
+      "parent": "Hips",
+      "children": [
+        "Spine1"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 2,
+      "name": "Spine1",
+      "parent": "Spine",
+      "children": [
+        "Spine2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 3,
+      "name": "Spine2",
+      "parent": "Spine1",
+      "children": [
+        "Neck",
+        "LeftShoulder",
+        "RightShoulder"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 4,
+      "name": "Neck",
+      "parent": "Spine2",
+      "children": [
+        "Head"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 5,
+      "name": "Head",
+      "parent": "Neck",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 6,
+      "name": "LeftShoulder",
+      "parent": "Spine2",
+      "children": [
+        "LeftArm"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 7,
+      "name": "LeftArm",
+      "parent": "LeftShoulder",
+      "children": [
+        "LeftForeArm"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 8,
+      "name": "LeftForeArm",
+      "parent": "LeftArm",
+      "children": [
+        "LeftHand"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 9,
+      "name": "LeftHand",
+      "parent": "LeftForeArm",
+      "children": [
+        "LeftHandIndex1",
+        "LeftHandMiddle1",
+        "LeftHandPinky1",
+        "LeftHandRing1",
+        "LeftHandThumb1"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 10,
+      "name": "LeftHandThumb1",
+      "parent": "LeftHand",
+      "children": [
+        "LeftHandThumb2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 11,
+      "name": "LeftHandThumb2",
+      "parent": "LeftHandThumb1",
+      "children": [
+        "LeftHandThumb3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 12,
+      "name": "LeftHandThumb3",
+      "parent": "LeftHandThumb2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 13,
+      "name": "LeftHandIndex1",
+      "parent": "LeftHand",
+      "children": [
+        "LeftHandIndex2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 14,
+      "name": "LeftHandIndex2",
+      "parent": "LeftHandIndex1",
+      "children": [
+        "LeftHandIndex3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 15,
+      "name": "LeftHandIndex3",
+      "parent": "LeftHandIndex2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 16,
+      "name": "LeftHandMiddle1",
+      "parent": "LeftHand",
+      "children": [
+        "LeftHandMiddle2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 17,
+      "name": "LeftHandMiddle2",
+      "parent": "LeftHandMiddle1",
+      "children": [
+        "LeftHandMiddle3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 18,
+      "name": "LeftHandMiddle3",
+      "parent": "LeftHandMiddle2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 19,
+      "name": "LeftHandRing1",
+      "parent": "LeftHand",
+      "children": [
+        "LeftHandRing2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 20,
+      "name": "LeftHandRing2",
+      "parent": "LeftHandRing1",
+      "children": [
+        "LeftHandRing3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 21,
+      "name": "LeftHandRing3",
+      "parent": "LeftHandRing2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 22,
+      "name": "LeftHandPinky1",
+      "parent": "LeftHand",
+      "children": [
+        "LeftHandPinky2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 23,
+      "name": "LeftHandPinky2",
+      "parent": "LeftHandPinky1",
+      "children": [
+        "LeftHandPinky3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 24,
+      "name": "LeftHandPinky3",
+      "parent": "LeftHandPinky2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 25,
+      "name": "RightShoulder",
+      "parent": "Spine2",
+      "children": [
+        "RightArm"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 26,
+      "name": "RightArm",
+      "parent": "RightShoulder",
+      "children": [
+        "RightForeArm"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 27,
+      "name": "RightForeArm",
+      "parent": "RightArm",
+      "children": [
+        "RightHand"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 28,
+      "name": "RightHand",
+      "parent": "RightForeArm",
+      "children": [
+        "RightHandIndex1",
+        "RightHandMiddle1",
+        "RightHandPinky1",
+        "RightHandRing1",
+        "RightHandThumb1"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 29,
+      "name": "RightHandThumb1",
+      "parent": "RightHand",
+      "children": [
+        "RightHandThumb2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 30,
+      "name": "RightHandThumb2",
+      "parent": "RightHandThumb1",
+      "children": [
+        "RightHandThumb3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 31,
+      "name": "RightHandThumb3",
+      "parent": "RightHandThumb2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 32,
+      "name": "RightHandIndex1",
+      "parent": "RightHand",
+      "children": [
+        "RightHandIndex2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 33,
+      "name": "RightHandIndex2",
+      "parent": "RightHandIndex1",
+      "children": [
+        "RightHandIndex3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 34,
+      "name": "RightHandIndex3",
+      "parent": "RightHandIndex2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 35,
+      "name": "RightHandMiddle1",
+      "parent": "RightHand",
+      "children": [
+        "RightHandMiddle2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 36,
+      "name": "RightHandMiddle2",
+      "parent": "RightHandMiddle1",
+      "children": [
+        "RightHandMiddle3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 37,
+      "name": "RightHandMiddle3",
+      "parent": "RightHandMiddle2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 38,
+      "name": "RightHandRing1",
+      "parent": "RightHand",
+      "children": [
+        "RightHandRing2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 39,
+      "name": "RightHandRing2",
+      "parent": "RightHandRing1",
+      "children": [
+        "RightHandRing3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 40,
+      "name": "RightHandRing3",
+      "parent": "RightHandRing2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 41,
+      "name": "RightHandPinky1",
+      "parent": "RightHand",
+      "children": [
+        "RightHandPinky2"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 42,
+      "name": "RightHandPinky2",
+      "parent": "RightHandPinky1",
+      "children": [
+        "RightHandPinky3"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 43,
+      "name": "RightHandPinky3",
+      "parent": "RightHandPinky2",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 44,
+      "name": "LeftUpLeg",
+      "parent": "Hips",
+      "children": [
+        "LeftLeg"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 45,
+      "name": "LeftLeg",
+      "parent": "LeftUpLeg",
+      "children": [
+        "LeftFoot"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 46,
+      "name": "LeftFoot",
+      "parent": "LeftLeg",
+      "children": [
+        "LeftToeBase"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 47,
+      "name": "LeftToeBase",
+      "parent": "LeftFoot",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    },
+    {
+      "index": 48,
+      "name": "RightUpLeg",
+      "parent": "Hips",
+      "children": [
+        "RightLeg"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 49,
+      "name": "RightLeg",
+      "parent": "RightUpLeg",
+      "children": [
+        "RightFoot"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 50,
+      "name": "RightFoot",
+      "parent": "RightLeg",
+      "children": [
+        "RightToeBase"
+      ],
+      "hasChildren": true,
+      "type": "Bone"
+    },
+    {
+      "index": 51,
+      "name": "RightToeBase",
+      "parent": "RightFoot",
+      "children": [],
+      "hasChildren": false,
+      "type": "Bone"
+    }
+  ]
