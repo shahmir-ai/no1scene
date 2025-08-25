@@ -80,7 +80,6 @@ export function BackgroundPanel() {
             marginTop: '4px',
             lineHeight: '1.3'
           }}>
-            Select a pre-made 3D environment
           </div>
         </div>
       )}
@@ -100,17 +99,7 @@ export function BackgroundPanel() {
         </button>
       </div>
 
-      <div style={{ 
-        fontSize: '10px', 
-        color: '#666', 
-        lineHeight: '1.4',
-        marginTop: '12px',
-        padding: '8px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '4px'
-      }}>
-        <strong>Tip:</strong> Use 'B' key to cycle between background modes quickly
-      </div>
+     
     </div>
   );
 }
