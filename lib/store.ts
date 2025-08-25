@@ -3,7 +3,6 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import type { SceneJSON, AvatarData, CameraData, LightingData, BackgroundData } from './sceneSchema';
 import { defaultSceneData } from './sceneSchema';
 import type { Group, SkinnedMesh, Object3D } from 'three';
-import type { IKSetup } from './three/ik';
 
 // Extended avatar data with Three.js objects
 export interface LoadedAvatar extends AvatarData {
@@ -11,14 +10,13 @@ export interface LoadedAvatar extends AvatarData {
   bones?: { [name: string]: Object3D }; // Bone references
   morphTargets?: string[]; // Available morph target names
   skinnedMesh?: SkinnedMesh; // Main skinned mesh reference
-  ikSetup?: IKSetup; // IK setup if rigged
   hasRig: boolean; // Whether avatar has a usable skeleton
 }
 
 // UI state
 interface UIState {
   selectedAvatarId: string | null;
-  activeTool: 'select' | 'move' | 'rotate' | 'ik';
+  activeTool: 'select' | 'move' | 'rotate';
   transformMode: 'translate' | 'rotate' | 'scale';
   showGrid: boolean;
   showHelpers: boolean;
@@ -45,7 +43,6 @@ interface SceneStore {
   removeAvatar: (id: string) => void;
   updateAvatar: (id: string, updates: Partial<AvatarData>) => void;
   setAvatarObject: (id: string, object: Group, bones?: { [name: string]: Object3D }, morphTargets?: string[], skinnedMesh?: SkinnedMesh) => void;
-  setAvatarIK: (id: string, ikSetup: IKSetup | null) => void;
   updateAvatarMorph: (id: string, morphName: string, value: number) => void;
   
   // UI actions
@@ -62,7 +59,6 @@ interface SceneStore {
   resetScene: () => void;
   exportScene: () => SceneJSON;
   saveCurrentPoses: () => void;
-  restoreAvatarFromData: (avatarData: AvatarData) => void;
 }
 
 export const useSceneStore = create<SceneStore>()(
@@ -145,13 +141,6 @@ export const useSceneStore = create<SceneStore>()(
       set((state) => ({
         loadedAvatars: state.loadedAvatars.map((a) =>
           a.id === id ? { ...a, object, bones, morphTargets, skinnedMesh, hasRig: !!skinnedMesh?.skeleton } : a
-        ),
-      })),
-
-    setAvatarIK: (id, ikSetup) =>
-      set((state) => ({
-        loadedAvatars: state.loadedAvatars.map((a) =>
-          a.id === id ? { ...a, ikSetup: ikSetup || undefined } : a
         ),
       })),
 
@@ -274,16 +263,6 @@ export const useSceneStore = create<SceneStore>()(
 
             const updatedAvatar = { ...avatarData };
 
-            // Save IK target positions if available
-            if (loadedAvatar.ikSetup) {
-              const ikTargets: { [chainName: string]: [number, number, number] } = {};
-              loadedAvatar.ikSetup.chains.forEach(chain => {
-                const pos = chain.target.position;
-                ikTargets[chain.name] = [pos.x, pos.y, pos.z];
-              });
-              updatedAvatar.ikTargets = ikTargets;
-            }
-
             // Morph values are already updated in real-time by updateAvatarMorph
             // Transform data is already updated by updateAvatar
 
@@ -296,16 +275,6 @@ export const useSceneStore = create<SceneStore>()(
       const state = get();
       const loadedAvatar = state.loadedAvatars.find(a => a.id === avatarData.id);
       if (!loadedAvatar) return;
-
-      // Restore IK target positions
-      if (avatarData.ikTargets && loadedAvatar.ikSetup) {
-        loadedAvatar.ikSetup.chains.forEach(chain => {
-          const targetPos = avatarData.ikTargets?.[chain.name];
-          if (targetPos) {
-            chain.target.position.set(targetPos[0], targetPos[1], targetPos[2]);
-          }
-        });
-      }
 
       // Restore morph target values
       if (avatarData.morphs && loadedAvatar.skinnedMesh?.morphTargetDictionary) {

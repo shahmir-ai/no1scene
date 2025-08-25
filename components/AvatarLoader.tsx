@@ -4,11 +4,10 @@ import React, { useRef, useState } from 'react';
 import { GLTFLoader } from 'three-stdlib';
 import * as THREE from 'three';
 import { useSceneStore, useAvatars } from '../lib/store';
-import { setupIKForAvatar } from '../lib/three/ik';
 import { applyNeutralPose } from '../lib/three/poseUtils';
 
 export function AvatarLoader() {
-  const { addAvatar, removeAvatar, setAvatarObject, setSelectedAvatar, setAvatarIK } = useSceneStore();
+  const { addAvatar, removeAvatar, setAvatarObject, setSelectedAvatar } = useSceneStore();
   const avatars = useAvatars();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -166,22 +165,6 @@ export function AvatarLoader() {
       
       // Set the Three.js object
       setAvatarObject(avatarId, scene, bones, morphTargets, skinnedMesh);
-
-      // Set up IK if possible
-      if (skinnedMesh && (window as any).__scene) {
-        try {
-          const ikSetup = setupIKForAvatar(skinnedMesh, (window as any).__scene);
-          if (ikSetup) {
-            console.log(`IK setup successful for ${file.name}:`, ikSetup.chains.map(c => c.name));
-            setAvatarIK(avatarId, ikSetup);
-          }
-        } catch (error) {
-          console.warn('Failed to setup IK for avatar:', error);
-          setAvatarIK(avatarId, null);
-        }
-      } else {
-        setAvatarIK(avatarId, null);
-      }
 
       // Apply neutral pose for rigged models
       if (skinnedMesh && bones && Object.keys(bones).length > 0) {
