@@ -208,25 +208,33 @@ export const useSceneStore = create<SceneStore>()(
 
     // Scene management
     loadScene: (sceneData) => {
-      set({
-        ...defaultSceneData,
-        ...sceneData,
-      });
-      // After setting state, we may need to trigger re-loads or updates
-      // in the Three.js scene, especially for avatars.
-      // We can use a timeout to ensure state is updated first.
+      set((state) => ({
+        scene: {
+          ...state.scene,
+          ...sceneData,
+        },
+        loadedAvatars: sceneData.avatars.map((avatar) => ({ ...avatar, hasRig: false })),
+        ui: {
+          ...state.ui,
+          selectedAvatarId: null,
+          isScreenshotModeActive: false,
+          screenshotPreviewUrl: null,
+        },
+      }));
+
+      // After setting state, we need to restore the live 3D object states
       setTimeout(() => {
         const state = get();
         sceneData.avatars.forEach(avatarData => {
           const loadedAvatar = state.loadedAvatars.find(a => a.id === avatarData.id);
-          if (loadedAvatar?.object) {
+          if (loadedAvatar?.skinnedMesh) {
             // Restore morph target values
             if (avatarData.morphs) {
               for (const morphName in avatarData.morphs) {
                 const influence = avatarData.morphs[morphName];
-                const morphIndex = loadedAvatar.object.morphTargetDictionary?.[morphName];
-                if (morphIndex !== undefined) {
-                  loadedAvatar.object.morphTargetInfluences![morphIndex] = influence;
+                const morphIndex = loadedAvatar.skinnedMesh.morphTargetDictionary?.[morphName];
+                if (morphIndex !== undefined && loadedAvatar.skinnedMesh.morphTargetInfluences) {
+                  loadedAvatar.skinnedMesh.morphTargetInfluences[morphIndex] = influence;
                 }
               }
             }
@@ -236,8 +244,8 @@ export const useSceneStore = create<SceneStore>()(
     },
 
     resetScene: () =>
-      set(() => ({
-        scene: { ...defaultSceneData },
+      set({
+        scene: defaultSceneData,
         loadedAvatars: [],
         ui: {
           selectedAvatarId: null,
@@ -248,7 +256,7 @@ export const useSceneStore = create<SceneStore>()(
           isScreenshotModeActive: false,
           screenshotPreviewUrl: null,
         },
-      })),
+      }),
 
     exportScene: () => {
       const state = get();
@@ -274,24 +282,6 @@ export const useSceneStore = create<SceneStore>()(
           }),
         },
       })),
-
-    restoreAvatarFromData: (avatarData) => {
-      const state = get();
-      const loadedAvatar = state.loadedAvatars.find(a => a.id === avatarData.id);
-      if (!loadedAvatar) return;
-
-      // Restore morph target values
-      if (avatarData.morphs && loadedAvatar.skinnedMesh?.morphTargetDictionary) {
-        Object.entries(avatarData.morphs).forEach(([morphName, value]) => {
-          const morphIndex = loadedAvatar.skinnedMesh!.morphTargetDictionary![morphName];
-          if (morphIndex !== undefined && loadedAvatar.skinnedMesh!.morphTargetInfluences) {
-            loadedAvatar.skinnedMesh!.morphTargetInfluences[morphIndex] = value;
-          }
-        });
-      }
-
-      // Transform data is already handled by the scene loading
-    },
   }))
 );
 
