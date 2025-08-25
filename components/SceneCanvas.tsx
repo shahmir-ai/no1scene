@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, TransformControls, Environment, Html } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three-stdlib';
 import * as THREE from 'three';
 import { useSceneStore, useCamera, useLighting, useBackground, useAvatars, useUI } from '../lib/store';
 import { applyNeutralPose } from '../lib/three/poseUtils';
