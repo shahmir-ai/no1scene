@@ -151,7 +151,7 @@ export const useSceneStore = create<SceneStore>()(
     setAvatarIK: (id, ikSetup) =>
       set((state) => ({
         loadedAvatars: state.loadedAvatars.map((a) =>
-          a.id === id ? { ...a, ikSetup } : a
+          a.id === id ? { ...a, ikSetup: ikSetup || undefined } : a
         ),
       })),
 
