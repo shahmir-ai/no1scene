@@ -208,25 +208,29 @@ export const useSceneStore = create<SceneStore>()(
 
     // Scene management
     loadScene: (sceneData) => {
-      set(() => ({
-        scene: sceneData,
-        loadedAvatars: sceneData.avatars.map((avatar) => ({ ...avatar, hasRig: false })),
-        ui: {
-          selectedAvatarId: null,
-          activeTool: 'select',
-          transformMode: 'translate',
-          showGrid: true,
-          showHelpers: true,
-          isScreenshotModeActive: false,
-          screenshotPreviewUrl: null,
-        },
-      }));
-      
-      // Restore avatar poses after a short delay to allow 3D objects to load
+      set({
+        ...defaultSceneData,
+        ...sceneData,
+      });
+      // After setting state, we may need to trigger re-loads or updates
+      // in the Three.js scene, especially for avatars.
+      // We can use a timeout to ensure state is updated first.
       setTimeout(() => {
         const state = get();
         sceneData.avatars.forEach(avatarData => {
-          state.restoreAvatarFromData(avatarData);
+          const loadedAvatar = state.loadedAvatars.find(a => a.id === avatarData.id);
+          if (loadedAvatar?.object) {
+            // Restore morph target values
+            if (avatarData.morphs) {
+              for (const morphName in avatarData.morphs) {
+                const influence = avatarData.morphs[morphName];
+                const morphIndex = loadedAvatar.object.morphTargetDictionary?.[morphName];
+                if (morphIndex !== undefined) {
+                  loadedAvatar.object.morphTargetInfluences![morphIndex] = influence;
+                }
+              }
+            }
+          }
         });
       }, 100);
     },
