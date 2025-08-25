@@ -115,7 +115,10 @@ export function setupIKForAvatar(skinnedMesh: THREE.SkinnedMesh, scene: THREE.Sc
     const ikData = {
       target: target,
       effector: effector,
-      links: leftArmBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) }))
+      links: leftArmBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) })),
+      iteration: 15,
+      minAngle: 0,
+      maxAngle: 1,
     };
 
     const solver = new CCDIKSolver(skinnedMesh, [ikData]);
@@ -140,7 +143,10 @@ export function setupIKForAvatar(skinnedMesh: THREE.SkinnedMesh, scene: THREE.Sc
     const ikData = {
       target: target,
       effector: effector,
-      links: rightArmBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) }))
+      links: rightArmBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) })),
+      iteration: 15,
+      minAngle: 0,
+      maxAngle: 1,
     };
 
     const solver = new CCDIKSolver(skinnedMesh, [ikData]);
@@ -165,7 +171,10 @@ export function setupIKForAvatar(skinnedMesh: THREE.SkinnedMesh, scene: THREE.Sc
     const ikData = {
       target: target,
       effector: effector,
-      links: leftLegBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) }))
+      links: leftLegBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) })),
+      iteration: 15,
+      minAngle: 0,
+      maxAngle: 1,
     };
 
     const solver = new CCDIKSolver(skinnedMesh, [ikData]);
@@ -190,7 +199,10 @@ export function setupIKForAvatar(skinnedMesh: THREE.SkinnedMesh, scene: THREE.Sc
     const ikData = {
       target: target,
       effector: effector,
-      links: rightLegBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) }))
+      links: rightLegBones.slice(0, -1).map(bone => ({ index: skeleton.bones.indexOf(bone) })),
+      iteration: 15,
+      minAngle: 0,
+      maxAngle: 1,
     };
 
     const solver = new CCDIKSolver(skinnedMesh, [ikData]);
