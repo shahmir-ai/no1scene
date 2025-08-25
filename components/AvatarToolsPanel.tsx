@@ -162,13 +162,13 @@ export function AvatarToolsPanel() {
             onClick={() => handleTransformModeChange('translate')}
             style={{
               padding: '8px 12px',
-              background: ui.transformMode === 'translate' ? '#0070f3' : 'rgba(255, 255, 255, 0.1)',
+              background: (ui.transformMode === 'translate' && ui.activeTool === 'move') ? '#0070f3' : 'rgba(255, 255, 255, 0.1)',
               border: 'none',
               color: 'white',
               borderRadius: '4px',
               fontSize: '11px',
               cursor: 'pointer',
-              fontWeight: ui.transformMode === 'translate' ? 600 : 400,
+              fontWeight: (ui.transformMode === 'translate' && ui.activeTool === 'move') ? 600 : 400,
             }}
           >
             Move
@@ -177,13 +177,13 @@ export function AvatarToolsPanel() {
             onClick={() => handleTransformModeChange('rotate')}
             style={{
               padding: '8px 12px',
-              background: ui.transformMode === 'rotate' ? '#0070f3' : 'rgba(255, 255, 255, 0.1)',
+              background: (ui.transformMode === 'rotate' && ui.activeTool === 'move') ? '#0070f3' : 'rgba(255, 255, 255, 0.1)',
               border: 'none',
               color: 'white',
               borderRadius: '4px',
               fontSize: '11px',
               cursor: 'pointer',
-              fontWeight: ui.transformMode === 'rotate' ? 600 : 400,
+              fontWeight: (ui.transformMode === 'rotate' && ui.activeTool === 'move') ? 600 : 400,
             }}
           >
             Rotate
@@ -192,13 +192,13 @@ export function AvatarToolsPanel() {
             onClick={() => handleTransformModeChange('scale')}
             style={{
               padding: '8px 12px',
-              background: ui.transformMode === 'scale' ? '#0070f3' : 'rgba(255, 255, 255, 0.1)',
+              background: (ui.transformMode === 'scale' && ui.activeTool === 'move') ? '#0070f3' : 'rgba(255, 255, 255, 0.1)',
               border: 'none',
               color: 'white',
               borderRadius: '4px',
               fontSize: '11px',
               cursor: 'pointer',
-              fontWeight: ui.transformMode === 'scale' ? 600 : 400,
+              fontWeight: (ui.transformMode === 'scale' && ui.activeTool === 'move') ? 600 : 400,
             }}
           >
             Scale

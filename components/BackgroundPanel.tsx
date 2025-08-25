@@ -8,7 +8,7 @@ export function BackgroundPanel() {
   const { updateBackground } = useSceneStore();
 
   const handleModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const mode = event.target.value as 'flat' | 'hdri' | 'set';
+    const mode = event.target.value as 'flat' | 'set';
     updateBackground({ mode });
   };
 
@@ -42,7 +42,6 @@ export function BackgroundPanel() {
           className="control-input"
         >
           <option value="flat">Flat Color</option>
-          <option value="hdri">HDRI</option>
           <option value="set">3D Set</option>
         </select>
       </div>
@@ -60,40 +59,6 @@ export function BackgroundPanel() {
         </div>
       )}
 
-      {background.mode === 'hdri' && (
-        <div className="control-group">
-          <label className="control-label">HDRI File</label>
-          <input
-            type="file"
-            accept=".hdr,.hdri,.exr"
-            onChange={handleHDRIChange}
-            className="control-input"
-            style={{ 
-              padding: '4px',
-              fontSize: '11px',
-              height: 'auto'
-            }}
-          />
-          <div style={{ 
-            fontSize: '10px', 
-            color: '#888', 
-            marginTop: '4px',
-            lineHeight: '1.3'
-          }}>
-            Upload .hdr, .hdri, or .exr files for environment lighting
-          </div>
-          {background.hdriPath && (
-            <div style={{ 
-              fontSize: '10px', 
-              color: '#4CAF50', 
-              marginTop: '4px' 
-            }}>
-              ✓ HDRI loaded
-            </div>
-          )}
-        </div>
-      )}
-
       {background.mode === 'set' && (
         <div className="control-group">
           <label className="control-label">3D Set</label>
@@ -103,9 +68,11 @@ export function BackgroundPanel() {
             className="control-input"
           >
             <option value="">None</option>
-            <option value="/sets/studio.glb">Studio Cyclorama</option>
             <option value="/sets/warehouse.glb">Warehouse</option>
-            <option value="/sets/forest.glb">Forest Scene</option>
+            <option value="/sets/bamboo_forest.glb">Bamboo Forest</option>
+            <option value="/sets/empty_office.glb">Empty Office</option>
+            <option value="/sets/pine_forest.glb">Pine Forest</option>
+            <option value="/sets/temple.glb">Temple</option>
           </select>
           <div style={{ 
             fontSize: '10px', 
@@ -124,7 +91,6 @@ export function BackgroundPanel() {
             updateBackground({
               mode: 'flat',
               color: '#000000',
-              hdriPath: undefined,
               setPath: undefined,
             });
           }}

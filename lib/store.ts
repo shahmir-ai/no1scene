@@ -22,6 +22,8 @@ interface UIState {
   transformMode: 'translate' | 'rotate' | 'scale';
   showGrid: boolean;
   showHelpers: boolean;
+  isScreenshotModeActive: boolean;
+  screenshotPreviewUrl: string | null;
 }
 
 // Scene store interface
@@ -52,6 +54,8 @@ interface SceneStore {
   setTransformMode: (mode: UIState['transformMode']) => void;
   toggleGrid: () => void;
   toggleHelpers: () => void;
+  toggleScreenshotMode: () => void;
+  setScreenshotPreviewUrl: (url: string | null) => void;
   
   // Scene management
   loadScene: (sceneData: SceneJSON) => void;
@@ -72,6 +76,8 @@ export const useSceneStore = create<SceneStore>()(
       transformMode: 'translate',
       showGrid: true,
       showHelpers: true,
+      isScreenshotModeActive: false,
+      screenshotPreviewUrl: null,
     },
 
     // Scene actions
@@ -201,6 +207,16 @@ export const useSceneStore = create<SceneStore>()(
         ui: { ...state.ui, showHelpers: !state.ui.showHelpers },
       })),
 
+    toggleScreenshotMode: () =>
+      set((state) => ({
+        ui: { ...state.ui, isScreenshotModeActive: !state.ui.isScreenshotModeActive },
+      })),
+
+    setScreenshotPreviewUrl: (url) =>
+      set((state) => ({
+        ui: { ...state.ui, screenshotPreviewUrl: url },
+      })),
+
     // Scene management
     loadScene: (sceneData) => {
       set(() => ({
@@ -212,6 +228,8 @@ export const useSceneStore = create<SceneStore>()(
           transformMode: 'translate',
           showGrid: true,
           showHelpers: true,
+          isScreenshotModeActive: false,
+          screenshotPreviewUrl: null,
         },
       }));
       
@@ -234,6 +252,8 @@ export const useSceneStore = create<SceneStore>()(
           transformMode: 'translate',
           showGrid: true,
           showHelpers: true,
+          isScreenshotModeActive: false,
+          screenshotPreviewUrl: null,
         },
       })),
 

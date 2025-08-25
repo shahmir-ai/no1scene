@@ -11,10 +11,14 @@ import { ExpressionPanel } from './ExpressionPanel';
 import { ExportPanel } from './ExportPanel';
 
 
-import { useSceneStore, useCamera } from '../lib/store';
+import { useSceneStore, useCamera, useUI } from '../lib/store';
+import * as THREE from 'three';
+// import { CameraInfo } from './CameraInfo';
+import { ScreenshotOverlay } from './ScreenshotOverlay';
+import { ScreenshotPreview } from './ScreenshotPreview';
 
 export function UiShell() {
-  const { toggleGrid, resetScene, updateCamera, setTransformMode, setActiveTool, addAvatar, setAvatarObject } = useSceneStore();
+  const { toggleGrid, resetScene, updateCamera, setTransformMode, setActiveTool, addAvatar, setAvatarObject, toggleScreenshotMode } = useSceneStore();
   const camera = useCamera();
   const [showAvatarPopup, setShowAvatarPopup] = React.useState(false);
   const objectFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -26,9 +30,45 @@ export function UiShell() {
 
     try {
       const url = URL.createObjectURL(file);
-      const { loadAvatarFromUrl } = await import('../lib/avatarLoader');
       
-      const { scene, bones, morphTargets, skinnedMesh } = await loadAvatarFromUrl(url);
+      // Simple object loader - no avatar processing
+      const { GLTFLoader } = await import('three-stdlib');
+      const loader = new GLTFLoader();
+      
+      const gltf = await new Promise<any>((resolve, reject) => {
+        loader.load(
+          url,
+          (gltf) => resolve(gltf),
+          undefined,
+          (error) => reject(error)
+        );
+      });
+
+      const scene = gltf.scene;
+      scene.name = file.name.replace(/\.(glb|gltf)$/i, '');
+      
+      // Simple scaling for objects - keep original size or scale to reasonable bounds
+      const box = new THREE.Box3().setFromObject(scene);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      
+      // Scale objects to reasonable size (max dimension = 1.8 units, same as avatars)
+      if (maxDim > 1.8) {
+        const scale = 1.8 / maxDim;
+        scene.scale.setScalar(scale);
+        console.log(`Object scaled down by ${scale.toFixed(3)} to fit scene`);
+      } else if (maxDim < 0.1) {
+        const scale = 1.8 / maxDim;
+        scene.scale.setScalar(scale);
+        console.log(`Object scaled up by ${scale.toFixed(3)} to be visible`);
+      } else {
+        // For objects in reasonable range, keep original size
+        console.log(`Object size is reasonable (${maxDim.toFixed(3)} units), keeping original scale`);
+      }
+      
+      // Position object on the floor
+      const scaledBox = new THREE.Box3().setFromObject(scene);
+      scene.position.y = -scaledBox.min.y;
       
       // Generate unique ID for the object
       const objectId = `object_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -46,7 +86,7 @@ export function UiShell() {
       };
       
       addAvatar(objectData);
-      setAvatarObject(objectId, scene, bones, morphTargets, skinnedMesh || undefined);
+      setAvatarObject(objectId, scene, {}, [], undefined);
       
       console.log(`Object loaded successfully: ${file.name}`);
     } catch (error) {
@@ -64,6 +104,10 @@ export function UiShell() {
   const keysPressed = useRef(new Set<string>());
   const animationFrameRef = useRef<number | null>(null);
   
+  // Track arrow keys for smooth camera controls
+  const arrowKeysPressed = useRef(new Set<string>());
+  const arrowAnimationFrameRef = useRef<number | null>(null);
+  
   const smoothPanCamera = useRef(() => {
     if (keysPressed.current.size === 0) {
       animationFrameRef.current = null;
@@ -74,27 +118,41 @@ export function UiShell() {
     const currentTarget = camera.target;
     const currentPos = camera.position;
     
+    // Calculate camera-relative directions
+    const cameraPos = new THREE.Vector3(currentPos[0], currentPos[1], currentPos[2]);
+    const cameraTarget = new THREE.Vector3(currentTarget[0], currentTarget[1], currentTarget[2]);
+    const cameraDirection = new THREE.Vector3().subVectors(cameraTarget, cameraPos).normalize();
+    const cameraRight = new THREE.Vector3().crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0)).normalize();
+    const cameraUp = new THREE.Vector3().crossVectors(cameraRight, cameraDirection).normalize();
+    
     let deltaX = 0;
     let deltaY = 0;
+    let deltaZ = 0;
     
     if (keysPressed.current.has('w') || keysPressed.current.has('W')) {
+      // Move up on Y-axis (keep original behavior)
       deltaY += panSpeed;
     }
     if (keysPressed.current.has('s') || keysPressed.current.has('S')) {
+      // Move down on Y-axis (keep original behavior)
       deltaY -= panSpeed;
     }
     if (keysPressed.current.has('a') || keysPressed.current.has('A')) {
-      deltaX -= panSpeed;
+      // Move left relative to camera view
+      deltaX -= cameraRight.x * panSpeed;
+      deltaZ -= cameraRight.z * panSpeed;
     }
     if (keysPressed.current.has('d') || keysPressed.current.has('D')) {
-      deltaX += panSpeed;
+      // Move right relative to camera view
+      deltaX += cameraRight.x * panSpeed;
+      deltaZ += cameraRight.z * panSpeed;
     }
     
-    if (deltaX !== 0 || deltaY !== 0) {
+    if (deltaX !== 0 || deltaY !== 0 || deltaZ !== 0) {
       const newTarget: [number, number, number] = [
         currentTarget[0] + deltaX,
         currentTarget[1] + deltaY,
-        currentTarget[2]
+        currentTarget[2] + deltaZ
       ];
       
       // Calculate new camera position maintaining the same relative distance and angle
@@ -119,6 +177,56 @@ export function UiShell() {
     // Continue animation
     animationFrameRef.current = requestAnimationFrame(smoothPanCamera.current);
   });
+
+  const smoothArrowControls = useRef(() => {
+    if (arrowKeysPressed.current.size === 0) {
+      arrowAnimationFrameRef.current = null;
+      return;
+    }
+    
+    const controls = (window as any).__orbitControls;
+    if (!controls) {
+      arrowAnimationFrameRef.current = requestAnimationFrame(smoothArrowControls.current);
+      return;
+    }
+    
+    const zoomScale = 1.02; // Use a scale factor > 1 for smooth zoom
+    const rotateSpeed = 0.02; // Radians per frame for smooth rotation
+
+    // --- SMOOTH ZOOM ---
+    if (arrowKeysPressed.current.has('ArrowDown')) { // Swapped for intuitive controls
+      controls.dollyIn(zoomScale);
+    }
+    if (arrowKeysPressed.current.has('ArrowUp')) { // Swapped for intuitive controls
+      controls.dollyOut(zoomScale);
+    }
+    
+    // --- SMOOTH ROTATION ---
+    const camera = controls.object;
+    const target = controls.target;
+    const offset = camera.position.clone().sub(target);
+    let rotationOccurred = false;
+
+    if (arrowKeysPressed.current.has('ArrowLeft')) {
+      const quaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotateSpeed);
+      offset.applyQuaternion(quaternion);
+      rotationOccurred = true;
+    }
+    if (arrowKeysPressed.current.has('ArrowRight')) {
+      const quaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -rotateSpeed);
+      offset.applyQuaternion(quaternion);
+      rotationOccurred = true;
+    }
+
+    if (rotationOccurred) {
+      camera.position.copy(target).add(offset);
+    }
+    
+    controls.update();
+    
+    // Continue animation
+    arrowAnimationFrameRef.current = requestAnimationFrame(smoothArrowControls.current);
+  });
   
   // Update the smoothPanCamera ref to use current camera values
   smoothPanCamera.current = () => {
@@ -131,27 +239,41 @@ export function UiShell() {
     const currentTarget = camera.target;
     const currentPos = camera.position;
     
+    // Calculate camera-relative directions
+    const cameraPos = new THREE.Vector3(currentPos[0], currentPos[1], currentPos[2]);
+    const cameraTarget = new THREE.Vector3(currentTarget[0], currentTarget[1], currentTarget[2]);
+    const cameraDirection = new THREE.Vector3().subVectors(cameraTarget, cameraPos).normalize();
+    const cameraRight = new THREE.Vector3().crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0)).normalize();
+    const cameraUp = new THREE.Vector3().crossVectors(cameraRight, cameraDirection).normalize();
+    
     let deltaX = 0;
     let deltaY = 0;
+    let deltaZ = 0;
     
     if (keysPressed.current.has('w') || keysPressed.current.has('W')) {
+      // Move up on Y-axis (keep original behavior)
       deltaY += panSpeed;
     }
     if (keysPressed.current.has('s') || keysPressed.current.has('S')) {
+      // Move down on Y-axis (keep original behavior)
       deltaY -= panSpeed;
     }
     if (keysPressed.current.has('a') || keysPressed.current.has('A')) {
-      deltaX -= panSpeed;
+      // Move left relative to camera view
+      deltaX -= cameraRight.x * panSpeed;
+      deltaZ -= cameraRight.z * panSpeed;
     }
     if (keysPressed.current.has('d') || keysPressed.current.has('D')) {
-      deltaX += panSpeed;
+      // Move right relative to camera view
+      deltaX += cameraRight.x * panSpeed;
+      deltaZ += cameraRight.z * panSpeed;
     }
     
-    if (deltaX !== 0 || deltaY !== 0) {
+    if (deltaX !== 0 || deltaY !== 0 || deltaZ !== 0) {
       const newTarget: [number, number, number] = [
         currentTarget[0] + deltaX,
         currentTarget[1] + deltaY,
-        currentTarget[2]
+        currentTarget[2] + deltaZ
       ];
       
       const offset = [
@@ -235,6 +357,17 @@ export function UiShell() {
         return;
       }
 
+      // Handle arrow key controls
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        const wasEmpty = arrowKeysPressed.current.size === 0;
+        arrowKeysPressed.current.add(event.key);
+        // Start smooth arrow key animation if not already running
+        if (wasEmpty && !arrowAnimationFrameRef.current) {
+          arrowAnimationFrameRef.current = requestAnimationFrame(smoothArrowControls.current);
+        }
+        return;
+      }
+
       switch (event.key) {
         case 'z':
         case 'Z':
@@ -300,6 +433,15 @@ export function UiShell() {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
+      
+      // Remove from arrow keys
+      arrowKeysPressed.current.delete(event.key);
+      
+      // Stop arrow animation if no keys pressed
+      if (arrowKeysPressed.current.size === 0 && arrowAnimationFrameRef.current) {
+        cancelAnimationFrame(arrowAnimationFrameRef.current);
+        arrowAnimationFrameRef.current = null;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -308,12 +450,18 @@ export function UiShell() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      // Clean up animation frame
+      // Clean up animation frames
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (arrowAnimationFrameRef.current) {
+        cancelAnimationFrame(arrowAnimationFrameRef.current);
+      }
     };
-  }, [toggleGrid, resetScene, updateCamera, setTransformMode, setActiveTool]);
+  }, [toggleGrid, resetScene, updateCamera, setTransformMode, setActiveTool, toggleScreenshotMode]);
+
+  const { isScreenshotModeActive } = useUI();
+  const controlsRef = useRef<any>();
 
   return (
     <div className="editor-layout">
@@ -338,63 +486,82 @@ export function UiShell() {
         <div className="panel">
           <h3>Scene Tools</h3>
           <div className="control-group">
-            <button 
-              onClick={() => setShowAvatarPopup(true)}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '8px 12px',
-                background: '#0070f3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '12px',
-                textAlign: 'center',
-                marginBottom: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              Add Avatar
-            </button>
-            
-            <input
-              type="file"
-              accept=".glb,.gltf"
-              onChange={handleObjectUpload}
-              style={{ display: 'none' }}
-              ref={objectFileInputRef}
-            />
-            <button
-              onClick={() => objectFileInputRef.current?.click()}
-              style={{
-                width: '100%',
-                padding: '8px 16px',
-                background: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '12px',
-                textAlign: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              Add Object
-            </button>
-          </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <button 
+                onClick={() => setShowAvatarPopup(true)}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  textAlign: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                Add Avatar
+              </button>
+              
+              <input
+                type="file"
+                accept=".glb,.gltf"
+                onChange={handleObjectUpload}
+                style={{ display: 'none' }}
+                ref={objectFileInputRef}
+              />
+              <button
+                onClick={() => objectFileInputRef.current?.click()}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  textAlign: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                Add Object
+              </button>
 
-          <div className="control-group">
-            <button 
-              className="control-button secondary"
-              onClick={toggleGrid}
-              title="Toggle grid (Z)"
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                fontSize: '12px'
-              }}
-            >
-              Toggle Grid
-            </button>
+              <button 
+                onClick={toggleGrid} 
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  textAlign: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                Toggle Grid
+              </button>
+              <button 
+                onClick={toggleScreenshotMode} 
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: '#0070f3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  textAlign: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                Thumbnail
+              </button>
+            </div>
           </div>
         </div>
         
@@ -403,9 +570,11 @@ export function UiShell() {
         {/* <ExportPanel /> */}
       </div>
 
-      {/* Center - 3D Canvas */}
-      <div className="center-canvas">
+      {/* Center Canvas */}
+      <div className="center-canvas-container">
         <SceneCanvas />
+        {/* {!isScreenshotModeActive && <CameraInfo />} */}
+        <ScreenshotOverlay />
       </div>
 
       {/* Right Panel - Scene Controls */}
@@ -420,6 +589,8 @@ export function UiShell() {
         isOpen={showAvatarPopup} 
         onClose={() => setShowAvatarPopup(false)} 
       />
+      
+      <ScreenshotPreview />
     </div>
   );
 }

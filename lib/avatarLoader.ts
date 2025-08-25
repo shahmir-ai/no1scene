@@ -54,7 +54,7 @@ const calculateAutoScale = (scene: THREE.Group): number => {
   const size = box.getSize(new THREE.Vector3());
   const currentHeight = size.y;
   
-  const targetHeight = 8.0; // Target height in meters (increased for better visibility)
+  const targetHeight = 1.8; // Target height in meters (reasonable human size)
   
   console.log(`Original model height: ${currentHeight.toFixed(4)} units`);
   

@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, Grid, TransformControls } from '@react-three/drei';
+import { OrbitControls, Grid, TransformControls, Environment, Html } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
 import { useSceneStore, useCamera, useLighting, useBackground, useAvatars, useUI } from '../lib/store';
-import { loadHDRI, applyHDRIToScene, removeHDRIFromScene, createDefaultEnvironment } from '../lib/three/loadHDRI';
+import { applyNeutralPose } from '../lib/three/poseUtils';
 
+// Configuration for adjusting position, rotation, and scale of each 3D set
+const setAdjustments: { [key: string]: { position?: [number, number, number], rotation?: [number, number, number], scale?: number } } = {
+  '/sets/bamboo_forest.glb': { position: [0, -1.5, 0] },
+  '/sets/empty_office.glb': { position: [-15, -0.1, 0], scale: 1.4 },
+  '/sets/pine_forest.glb': { position: [0, 0.25, 0] },
+  '/sets/temple.glb': { scale: 12, position: [0, -1, 0] },
+  '/sets/warehouse.glb': { position: [-5, 0, 15] },
+};
 
 // Simple working scale handle - rebuilt from scratch
 function ScaleHandle({ target, onScale }: { target: THREE.Group, onScale: (scale: number) => void }) {
@@ -214,32 +223,14 @@ function SceneSetup() {
     (window as any).__scene = scene;
   }, [gl, camera, scene]);
 
-  // Set up initial environment
+  // Handle flat background color
   useEffect(() => {
-    const defaultEnv = createDefaultEnvironment();
-    scene.environment = defaultEnv;
-  }, [scene]);
-
-  // Handle HDRI loading
-  useEffect(() => {
-    if (background.mode === 'hdri' && background.hdriPath) {
-      loadHDRI(background.hdriPath)
-        .then(({ envMap }) => {
-          applyHDRIToScene(scene, envMap, lighting.hdri?.exposure || 1);
-        })
-        .catch((error) => {
-          console.error('Failed to load HDRI:', error);
-          // Fallback to default environment
-          const defaultEnv = createDefaultEnvironment();
-          scene.environment = defaultEnv;
-        });
-    } else if (background.mode === 'flat') {
-      removeHDRIFromScene(scene);
+    if (background.mode === 'flat') {
       scene.background = new THREE.Color(background.color || '#000000');
-    } else {
-      removeHDRIFromScene(scene);
+      scene.environment = null; // Remove environment map for flat color
     }
-  }, [scene, background, lighting.hdri?.exposure]);
+  }, [scene, background]);
+
 
   // Update camera position and target
   useEffect(() => {
@@ -270,43 +261,113 @@ function SceneSetup() {
   );
 }
 
+// Component to load and display the selected 3D set
+function SceneSet() {
+  const { setPath } = useBackground();
+  const [scene, setScene] = useState<THREE.Group | null>(null);
+
+  useEffect(() => {
+    if (setPath) {
+      const loader = new GLTFLoader();
+      loader.load(setPath, (gltf) => {
+        setScene(gltf.scene);
+      });
+    } else {
+      setScene(null);
+    }
+  }, [setPath]);
+
+  if (!scene || !setPath) return null;
+
+  const adjustment = setAdjustments[setPath] || {};
+  
+  return (
+    <group
+      position={adjustment.position || [0, 0, 0]}
+      rotation={adjustment.rotation || [0, 0, 0]}
+      scale={adjustment.scale || 1}
+    >
+      <primitive object={scene} />
+    </group>
+  );
+}
+
 // Light setup component
 function LightSetup() {
   const lighting = useLighting();
-  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const { preset, keyLightColor, environmentIntensity } = lighting;
 
-  // Update light properties
-  useFrame(() => {
-    if (lightRef.current) {
-      const light = lightRef.current;
-      light.intensity = lighting.key.intensity;
-      light.color.setHex(parseInt(lighting.key.color.replace('#', ''), 16));
-      
-      // Convert azimuth and elevation to position
-      const azimuth = (lighting.key.azimuth * Math.PI) / 180;
-      const elevation = (lighting.key.elevation * Math.PI) / 180;
-      
-      const distance = 10;
-      light.position.set(
-        distance * Math.cos(elevation) * Math.cos(azimuth),
-        distance * Math.sin(elevation),
-        distance * Math.cos(elevation) * Math.sin(azimuth)
-      );
-    }
-  });
+  // Define preset configurations
+  const presets = {
+    soft: {
+      key: { position: [4, 4, 4], intensity: 2.5 },
+      fill: { position: [-4, 2, 4], intensity: 1.5 },
+      rim: { position: [-2, 3, -6], intensity: 3.0 },
+      ambient: 0.2,
+    },
+    dramatic: {
+      key: { position: [5, 3, 2], intensity: 4.0 },
+      fill: { position: [-5, 1, 0], intensity: 0.5 },
+      rim: { position: [0, 2, -5], intensity: 2.0 },
+      ambient: 0.1,
+    },
+    dark: {
+      key: { position: [3, 2, 1], intensity: 5.0 },
+      fill: { position: [-3, 1, -2], intensity: 0.2 },
+      rim: { position: [2, 1, -4], intensity: 6.0 },
+      ambient: 0.05,
+    },
+  };
+
+  // Map presets to their HDRI files
+  const hdriMap = {
+    soft: '/hdri/studio.hdr',
+    dramatic: '/hdri/dramatic.hdr',
+    dark: '/hdri/dark.hdr',
+  };
+
+  const currentPreset = presets[preset];
+  const currentHdri = hdriMap[preset];
 
   return (
-    <directionalLight
-      ref={lightRef}
-      castShadow
-      shadow-mapSize-width={2048}
-      shadow-mapSize-height={2048}
-      shadow-camera-far={50}
-      shadow-camera-left={-10}
-      shadow-camera-right={10}
-      shadow-camera-top={10}
-      shadow-camera-bottom={-10}
-    />
+    <>
+      <Environment 
+        files={currentHdri}
+        background={false} 
+        blur={0.8}
+      />
+      
+      <ambientLight intensity={currentPreset.ambient} />
+
+      {/* Key Light */}
+      <directionalLight
+        position={currentPreset.key.position as [number, number, number]}
+        intensity={currentPreset.key.intensity}
+        color={keyLightColor}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+      />
+
+      {/* Fill Light */}
+      <directionalLight
+        position={currentPreset.fill.position as [number, number, number]}
+        intensity={currentPreset.fill.intensity}
+        color="#aaccff"
+      />
+
+      {/* Rim Light */}
+      <directionalLight
+        position={currentPreset.rim.position as [number, number, number]}
+        intensity={currentPreset.rim.intensity}
+        color="#ffddaa"
+      />
+    </>
   );
 }
 
@@ -363,13 +424,13 @@ function CameraInfo() {
         textAlign: 'center',
         marginBottom: '8px'
       }}>
-        X: {camera.target[0].toFixed(1)} Y: {camera.target[1].toFixed(1)}
+        X: {camera.target[0].toFixed(1)} Y: {camera.target[1].toFixed(1)} Z: {camera.target[2].toFixed(1)}
       </div>
       
       {/* Reset button */}
       <button
         onClick={() => updateCamera({ 
-          position: [0, 15, 20], 
+          position: [0, 3, 6], 
           target: [0, 0, 0] 
         })}
         style={{
@@ -387,15 +448,15 @@ function CameraInfo() {
         Reset Camera
       </button>
       
-      <div style={{
-        fontSize: '8px',
-        color: '#666',
-        textAlign: 'center',
-        marginTop: '6px',
-        lineHeight: '1.2'
-      }}>
-        Use WASD to pan camera
-      </div>
+              <div style={{
+          fontSize: '8px',
+          color: '#666',
+          textAlign: 'center',
+          marginTop: '6px',
+          lineHeight: '1.2'
+        }}>
+          WASD: Pan • Arrows: Zoom/Rotate • Mouse: Look
+        </div>
     </div>
   );
 }
@@ -467,6 +528,19 @@ function CameraControls() {
   );
 }
 
+function Loader() {
+  return (
+    <Html center>
+      <div className="loader-dots-container">
+        <div className="loader-dot loader-dot-1"></div>
+        <div className="loader-dot loader-dot-2"></div>
+        <div className="loader-dot loader-dot-3"></div>
+      </div>
+    </Html>
+  );
+}
+
+// Main canvas component that ties everything together
 export function SceneCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ui = useUI();
@@ -481,7 +555,7 @@ export function SceneCanvas() {
           height: '100%',
         }}
         camera={{
-          position: [0, 15, 20],
+          position: [0, 3, 6],
           fov: 50,
           near: 0.1,
           far: 1000,
@@ -497,27 +571,28 @@ export function SceneCanvas() {
           toneMappingExposure: 1,
         }}
       >
-        <SceneSetup />
-        <LightSetup />
-        <CameraControls />
-        <FPSCounter onFpsUpdate={setFps} />
-        
-        {/* Grid - Much larger canvas area */}
-        {ui.showGrid && (
-          <Grid
-            position={[0, 0, 0]}
-            args={[100, 100]}
-            cellSize={1}
-            cellThickness={0.5}
-            cellColor="#444444"
-            sectionSize={10}
-            sectionThickness={1}
-            sectionColor="#666666"
-          />
-        )}
-        
-        {/* Ambient light for basic illumination */}
-        <ambientLight intensity={0.3} />
+        <Suspense fallback={<Loader />}>
+          <SceneSetup />
+          <LightSetup />
+          <CameraControls />
+          <FPSCounter onFpsUpdate={setFps} />
+          
+          {/* Grid - Much larger canvas area */}
+          {ui.showGrid && (
+            <Grid
+              position={[0, 0, 0]}
+              args={[100, 100]}
+              cellSize={1}
+              cellThickness={0.5}
+              cellColor="#444444"
+              sectionSize={10}
+              sectionThickness={1}
+              sectionColor="#666666"
+            />
+          )}
+          
+          <SceneSet />
+        </Suspense>
       </Canvas>
       
       {/* Canvas overlay for UI elements */}
@@ -554,16 +629,18 @@ export function SceneCanvas() {
           top: '16px',
           right: '16px',
         }}>
-          <div style={{
-            background: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-          }}>
-            {fps} FPS
-          </div>
+          {!ui.isScreenshotModeActive && (
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontFamily: 'monospace',
+            }}>
+              {fps} FPS
+            </div>
+          )}
         </div>
       </div>
 

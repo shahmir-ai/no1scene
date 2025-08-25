@@ -9,17 +9,9 @@ const CameraSchema = z.object({
 
 // Lighting schema
 const LightingSchema = z.object({
-  key: z.object({
-    intensity: z.number().min(0).max(10).default(1),
-    color: z.string().default('#ffffff'),
-    azimuth: z.number().min(-180).max(180).default(45),
-    elevation: z.number().min(-90).max(90).default(45),
-  }),
-  hdri: z.object({
-    path: z.string().optional(),
-    exposure: z.number().min(-5).max(5).default(1),
-    enabled: z.boolean().default(true),
-  }).optional(),
+  preset: z.enum(['soft', 'dramatic', 'dark']).default('soft'),
+  keyLightColor: z.string().default('#ffffff'),
+  environmentIntensity: z.number().min(0).max(5).default(0.5),
 });
 
 // Background schema
@@ -71,20 +63,13 @@ export const defaultSceneData: SceneJSON = {
   },
   camera: {
     fov: 50,
-    position: [0, 15, 20], // Much closer default view for better model visibility
+    position: [0, 3, 6], // Very close view for 1.8m models
     target: [0, 0, 0],
   },
   lighting: {
-    key: {
-      intensity: 1,
-      color: '#ffffff',
-      azimuth: 45,
-      elevation: 45,
-    },
-    hdri: {
-      exposure: 1,
-      enabled: true,
-    },
+    preset: 'soft',
+    keyLightColor: '#ffffff',
+    environmentIntensity: 0.5,
   },
   background: {
     mode: 'flat',
