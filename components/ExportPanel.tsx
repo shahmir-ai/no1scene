@@ -318,17 +318,6 @@ export function ExportPanel() {
         </div>
       </div>
 
-      <div className="control-group">
-        <label className="control-label">Scene Management</label>
-        <button
-          onClick={handleLoadScene}
-          className="control-button secondary"
-          style={{ width: '100%' }}
-        >
-          Load Scene
-        </button>
-      </div>
-
       <div style={{ 
         fontSize: '10px', 
         color: '#666', 
