@@ -90,11 +90,7 @@ function RotatingModel({ modelUrl, variant = 'library' }: { modelUrl: string; va
     }
   });
 
-  return model ? <group ref={meshRef} position={model.position} rotation={model.rotation} scale={model.scale}>
-    {model.children.map((child, index) => (
-      <primitive key={index} object={child} />
-    ))}
-  </group> : null;
+  return model ? <primitive ref={meshRef} object={model} /> : null;
 }
 
 export function AvatarPreview({ modelUrl, width = 100, height = 80, variant = 'library' }: AvatarPreviewProps) {
