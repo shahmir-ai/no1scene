@@ -17,7 +17,7 @@ export function AvatarPopup({ isOpen, onClose }: AvatarPopupProps) {
   const [libraryAvatars, setLibraryAvatars] = useState<LibraryAvatar[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const store = useSceneStore();
-  const { addAvatar, setAvatarObject, setSelectedAvatar, setAvatarIK } = store;
+  const { addAvatar, setAvatarObject, setSelectedAvatar } = store;
 
   // Load avatar library when popup opens
   useEffect(() => {
