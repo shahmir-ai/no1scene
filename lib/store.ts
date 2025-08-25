@@ -112,7 +112,7 @@ export const useSceneStore = create<SceneStore>()(
           ...state.scene,
           avatars: [...state.scene.avatars, avatar],
         },
-        loadedAvatars: [...state.loadedAvatars, avatar],
+        loadedAvatars: [...state.loadedAvatars, { ...avatar, hasRig: false }],
       })),
 
     removeAvatar: (id) =>
