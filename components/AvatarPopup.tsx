@@ -100,7 +100,7 @@ export function AvatarPopup({ isOpen, onClose }: AvatarPopupProps) {
       addAvatar(avatarData);
       
       // Set the Three.js object
-      setAvatarObject(avatarId, scene, bones, morphTargets, skinnedMesh);
+      setAvatarObject(avatarId, scene, bones, morphTargets, skinnedMesh || undefined);
 
       // Skip IK setup - we're using direct bone rotation instead
       setAvatarIK(avatarId, null);
